@@ -123,4 +123,3 @@ fail2ban.config.whitelist:
     file.absent:
         - name: {{ fail2ban.prefix }}/etc/fail2ban/jails.d/whitelist.conf
 {% endif %}
-{% endfor %}
