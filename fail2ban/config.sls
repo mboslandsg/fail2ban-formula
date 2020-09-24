@@ -10,7 +10,7 @@ fail2ban.config.fail2ban:
                            'salt://fail2ban/files/config.jinja') %}
 
     file.managed:
-        - name: {{ fail2ban.prefix }}/etc/fail2ban/fail2ban.local
+        - name: {{ fail2ban.prefix }}/etc/fail2ban/jail.conf
         - source: {{ fail2ban_config }}
         - user: {{ fail2ban.user|default('root') }}
         - group: {{ fail2ban.group|default('root') }}
@@ -35,7 +35,7 @@ fail2ban.config.jails:
                           'salt://fail2ban/files/config.jinja') %}
 
     file.managed:
-        - name: {{ fail2ban.prefix }}/etc/fail2ban/jail.local
+        - name: {{ fail2ban.prefix }}/etc/fail2ban/fail.d/defaults-debian.conf
         - source: {{ fail2ban_jails }}
         - user: {{ fail2ban.user|default('root') }}
         - group: {{ fail2ban.group|default('root') }}
@@ -101,5 +101,26 @@ fail2ban.config.filter.{{ name }}:
 {% elif 'enabled' in options and not options.enabled %}
     file.absent:
         - name: {{ fail2ban.prefix }}/etc/fail2ban/filter.d/{{ name }}.local
+{% endif %}
+{% endfor %}
+
+fail2ban.config.whitelist:
+{% if ( 'enabled' in options and options.enabled ) or ('enabled' not in options ) %}
+    file.managed:
+        - name: {{ fail2ban.prefix }}/etc/fail2ban/jails.d/whitelist.conf
+        - source: {{ fail2ban_whitelist }}
+        - user: {{ fail2ban.user|default('root') }}
+        - group: {{ fail2ban.group|default('root') }}
+        - mode: '{{ fail2ban.mode|default("644") }}'
+        - template: jinja
+        - watch_in:
+          - service: {{ fail2ban.service }}
+    {% if options.config.source_path is not defined %}
+        - context:
+            config: {{ options.config|yaml }}
+    {% endif %}
+{% elif 'enabled' in options and not options.enabled %}
+    file.absent:
+        - name: {{ fail2ban.prefix }}/etc/fail2ban/jails.d/whitelist.conf
 {% endif %}
 {% endfor %}
